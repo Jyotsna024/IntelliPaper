@@ -15,7 +15,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 # ── GEMINI API KEY ─────────────────────────────────────────────────────────────
-GEMINI_API_KEY = "AIzaSyCy3GMXVJfSgt2LOXzJ-QzHirYgjIF9IVA"
+GEMINI_API_KEY = " "
 # Free key: https://aistudio.google.com/app/apikey
 # ──────────────────────────────────────────────────────────────────────────────
 
