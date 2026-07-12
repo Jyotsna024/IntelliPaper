@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>IntelliPaper — AI Research Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:         #F7F7F4;
+  --surface:    #FFFFFF;
+  --ink:        #111118;
+  --ink2:       #3A3A48;
+  --soft:       #7A7A90;
+  --border:     #E4E4EC;
+  --border2:    #CACAD8;
+  --accent:     #2563EB;
+  --accent-bg:  #EFF4FF;
+  --accent-mid: #BFCDFF;
+  --green:      #15803D;
+  --green-bg:   #DCFCE7;
+  --amber:      #B45309;
+  --amber-bg:   #FEF3C7;
+  --purple:     #7C3AED;
+  --purple-bg:  #F3E8FF;
+  --teal:       #0F766E;
+  --teal-bg:    #CCFBF1;
+  --red:        #DC2626;
+  --red-bg:     #FEE2E2;
+  --fh: 'Instrument Serif', Georgia, serif;
+  --fb: 'DM Sans', system-ui, sans-serif;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:var(--fb); font-size:15px; line-height:1.6; min-height:100vh; }
+
+/* ── HEADER ──────────────────────────────────────────── */
+header {
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:0 40px; height:56px; display:flex; align-items:center;
+  justify-content:space-between; position:sticky; top:0; z-index:100;
+}
+.logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.logo-mark {
+  width:30px; height:30px; background:var(--ink); border-radius:8px;
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+}
+.logo-name { font-family:var(--fh); font-size:19px; color:var(--ink); font-style:italic; }
+.logo-name b { font-style:normal; }
+.gemini-badge {
+  display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600;
+  color:var(--purple); background:var(--purple-bg); border:1px solid #DDD6FE;
+  border-radius:20px; padding:3px 10px; letter-spacing:.3px;
+}
+
+/* ── HERO ────────────────────────────────────────────── */
+.hero {
+  max-width:700px; margin:0 auto; padding:56px 24px 40px; text-align:center;
+}
+.hero h1 {
+  font-family:var(--fh); font-size:clamp(30px,5vw,50px);
+  font-weight:400; line-height:1.12; margin-bottom:14px; color:var(--ink);
+}
+.hero h1 em { color:var(--accent); font-style:italic; }
+.hero p { font-size:15px; color:var(--soft); max-width:440px; margin:0 auto 32px; line-height:1.7; }
+.feature-pills { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:0; }
+.pill {
+  font-size:11px; font-weight:600; padding:4px 12px; border-radius:20px; letter-spacing:.3px;
+  border:1px solid var(--border);
+}
+.pill-ai   { background:var(--purple-bg); color:var(--purple); border-color:#DDD6FE; }
+.pill-nlp  { background:var(--teal-bg);   color:var(--teal);   border-color:#99F6E4; }
+.pill-free { background:var(--green-bg);  color:var(--green);  border-color:#86EFAC; }
+
+/* ── INPUT CARD ─────────────────────────────────────── */
+.input-wrap { max-width:720px; margin:32px auto 0; padding:0 20px; }
+.input-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,.05);
+}
+.tab-bar { display:flex; border-bottom:1px solid var(--border); padding:0 6px; }
+.tab {
+  padding:14px 18px; border:none; background:none;
+  font-family:var(--fb); font-size:13px; font-weight:500;
+  color:var(--soft); cursor:pointer;
+  border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .2s;
+}
+.tab.on { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+.tab-body { padding:20px; }
+.pane { display:none; }
+.pane.on { display:block; }
+
+textarea {
+  width:100%; min-height:190px; resize:vertical;
+  border:1.5px solid var(--border); border-radius:12px;
+  padding:14px 16px; font-family:var(--fb); font-size:14px;
+  color:var(--ink); background:var(--bg); outline:none;
+  line-height:1.75; transition:border .2s;
+}
+textarea:focus { border-color:var(--accent); background:#fff; }
+textarea::placeholder { color:#B4B4C8; }
+.char-count { text-align:right; font-size:11px; color:var(--soft); margin-top:5px; }
+
+.drop-zone {
+  border:2px dashed var(--border2); border-radius:12px;
+  padding:48px 20px; text-align:center; cursor:pointer;
+  background:var(--bg); transition:all .2s;
+}
+.drop-zone:hover, .drop-zone.over { border-color:var(--accent); background:var(--accent-bg); }
+.dz-icon { font-size:34px; margin-bottom:10px; }
+.dz-title { font-weight:600; font-size:14px; color:var(--ink); }
+.dz-sub { font-size:12px; color:var(--soft); margin-top:4px; }
+.dz-sub span { color:var(--accent); cursor:pointer; }
+.dz-filename { font-size:12px; font-weight:600; color:var(--green); margin-top:10px; }
+
+.card-bottom {
+  padding:14px 20px; border-top:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  background:#FAFAF8;
+}
+.card-bottom-info { font-size:12px; color:var(--soft); }
+
+.run-btn {
+  display:flex; align-items:center; gap:8px;
+  padding:12px 28px; background:var(--ink); color:#fff; border:none;
+  border-radius:10px; font-family:var(--fb); font-size:14px; font-weight:600;
+  cursor:pointer; transition:all .2s;
+}
+.run-btn:hover:not(:disabled) { background:#232334; transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,.15); }
+.run-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.btn-spinner {
+  width:14px; height:14px; border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── PROGRESS ───────────────────────────────────────── */
+.progress-wrap {
+  max-width:720px; margin:20px auto 0; padding:0 20px; display:none;
+}
+.progress-wrap.on { display:block; }
+.progress-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:18px 22px;
+}
+.progress-label { font-size:13px; font-weight:500; color:var(--ink); margin-bottom:10px; }
+.progress-bar { height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin-bottom:12px; }
+.progress-fill { height:100%; background:var(--accent); border-radius:2px; width:0%; transition:width .5s ease; }
+.progress-steps { display:flex; flex-wrap:wrap; gap:6px; }
+.ps {
+  font-size:11px; font-weight:500; padding:3px 10px; border-radius:20px;
+  background:var(--border); color:var(--soft); transition:all .3s;
+}
+.ps.on   { background:var(--accent-bg); color:var(--accent); }
+.ps.done { background:var(--green-bg);  color:var(--green);  }
+
+/* ── ERROR ──────────────────────────────────────────── */
+.err-box {
+  max-width:720px; margin:14px auto 0; padding:0 20px; display:none;
+}
+.err-box.on { display:block; }
+.err-inner {
+  background:var(--red-bg); border:1px solid #FECACA;
+  border-radius:10px; padding:12px 16px;
+  font-size:13px; color:var(--red);
+}
+
+/* ── RESULTS ────────────────────────────────────────── */
+.results {
+  max-width:960px; margin:40px auto 0; padding:0 20px 80px; display:none;
+}
+.results.on { display:block; }
+
+.results-top {
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:12px; margin-bottom:24px;
+}
+.results-title { font-family:var(--fh); font-size:26px; font-style:italic; color:var(--ink); }
+.stat-chips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.stat-chip {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:4px 13px; font-size:12px; color:var(--ink2);
+}
+.stat-chip b { color:var(--ink); }
+.level-badge { font-size:12px; font-weight:600; padding:4px 13px; border-radius:20px; }
+.lv-Easy          { background:var(--green-bg);  color:var(--green);  }
+.lv-Moderate      { background:var(--amber-bg);  color:var(--amber);  }
+.lv-Difficult     { background:var(--red-bg);    color:var(--red);    }
+.lv-Very-Technical{ background:var(--red-bg);    color:var(--red);    }
+
+/* ── SECTION CARD ───────────────────────────────────── */
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:18px; margin-bottom:14px; overflow:hidden;
+  animation:rise .3s ease;
+}
+@keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.card-head {
+  padding:16px 22px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+}
+.card-head-left { display:flex; align-items:center; gap:10px; }
+.card-icon {
+  width:32px; height:32px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+}
+.ci-blue   { background:var(--accent-bg); }
+.ci-green  { background:var(--green-bg);  }
+.ci-amber  { background:var(--amber-bg);  }
+.ci-purple { background:var(--purple-bg); }
+.ci-teal   { background:var(--teal-bg);   }
+.card-name { font-size:14px; font-weight:600; color:var(--ink); }
+.card-head-right { display:flex; align-items:center; gap:8px; }
+.tag {
+  font-size:10px; font-weight:700; padding:2px 9px; border-radius:20px;
+  letter-spacing:.4px; text-transform:uppercase;
+}
+.tag-ai     { background:var(--purple-bg); color:var(--purple); border:1px solid #DDD6FE; }
+.tag-nlp    { background:var(--teal-bg);   color:var(--teal);   border:1px solid #99F6E4; }
+.tag-viva   { background:var(--amber-bg);  color:var(--amber);  border:1px solid #FDE68A; }
+.copy-btn {
+  background:none; border:1px solid var(--border); border-radius:7px;
+  padding:4px 11px; font-size:11px; font-weight:600; color:var(--soft);
+  cursor:pointer; transition:all .2s;
+}
+.copy-btn:hover { border-color:var(--accent); color:var(--accent); }
+.card-body { padding:22px 22px; }
+
+/* ── SUMMARY ────────────────────────────────────────── */
+.summary-p {
+  font-size:14px; color:var(--ink2); line-height:1.85;
+  margin-bottom:14px;
+}
+.summary-p:last-child { margin-bottom:0; }
+
+/* ── CONTRIBUTIONS ──────────────────────────────────── */
+.contrib-list { list-style:none; display:flex; flex-direction:column; gap:9px; }
+.contrib-item {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 14px; background:var(--bg); border-radius:10px;
+  border-left:3px solid var(--accent); font-size:13px; color:var(--ink2); line-height:1.65;
+}
+.contrib-n {
+  font-family:var(--fh); font-size:17px; color:var(--accent);
+  flex-shrink:0; line-height:1.3; margin-top:1px;
+}
+
+/* ── ARCHITECTURE ───────────────────────────────────── */
+.arch-flow { display:flex; flex-direction:column; }
+.arch-node {
+  border:1.5px solid var(--border); border-radius:12px;
+  padding:14px 18px; background:var(--bg); transition:border .2s;
+}
+.arch-node:hover { border-color:var(--accent); background:var(--accent-bg); }
+.arch-label {
+  font-weight:600; font-size:13px; color:var(--ink);
+  display:flex; align-items:center; gap:8px; margin-bottom:4px;
+}
+.arch-num {
+  width:22px; height:22px; background:var(--accent); color:#fff;
+  border-radius:50%; font-size:11px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.arch-detail { font-size:12px; color:var(--soft); line-height:1.5; }
+.arch-arrow { text-align:center; color:var(--accent); font-size:18px; padding:2px 0; }
+
+/* ── ELI5 ───────────────────────────────────────────── */
+.eli5-wrap { display:flex; flex-direction:column; gap:12px; }
+.eli5-p {
+  padding:16px 18px;
+  background:linear-gradient(135deg, #F0EEFF, #F8F4FF);
+  border:1px solid #E4D9FF; border-radius:12px;
+  font-size:14px; color:var(--ink2); line-height:1.8;
+}
+
+/* ── EXAM Q&A ───────────────────────────────────────── */
+.qa-list { display:flex; flex-direction:column; gap:10px; }
+.qa-card { border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.qa-q {
+  padding:11px 16px; background:var(--bg);
+  font-size:13px; font-weight:600; color:var(--ink);
+  border-bottom:1px solid var(--border);
+  display:flex; gap:8px; align-items:flex-start;
+}
+.qa-q-badge {
+  background:var(--accent); color:#fff;
+  font-size:9px; font-weight:700; padding:2px 7px;
+  border-radius:20px; margin-top:2px; flex-shrink:0; letter-spacing:.3px;
+}
+.qa-a { padding:11px 16px; font-size:13px; color:var(--ink2); line-height:1.7; }
+.qa-a-lbl {
+  font-size:9px; font-weight:700; letter-spacing:.5px;
+  color:var(--green); text-transform:uppercase; margin-bottom:5px;
+}
+
+/* ── ASK ANYTHING ───────────────────────────────────── */
+.ask-section {
+  max-width:960px; margin:0 auto 20px; padding:0 20px; display:none;
+}
+.ask-section.on { display:block; }
+.ask-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:18px; overflow:hidden;
+}
+.ask-head {
+  padding:16px 22px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+}
+.ask-head-icon { font-size:18px; }
+.ask-head-title { font-size:14px; font-weight:600; color:var(--ink); }
+.ask-head-sub { font-size:12px; color:var(--soft); margin-left:auto; }
+.ask-body { padding:18px 22px; }
+.ask-input-row { display:flex; gap:10px; align-items:flex-start; }
+.ask-input {
+  flex:1; border:1.5px solid var(--border); border-radius:10px;
+  padding:12px 14px; font-family:var(--fb); font-size:14px;
+  color:var(--ink); outline:none; transition:border .2s; resize:none;
+  min-height:48px; max-height:120px; overflow-y:auto;
+  line-height:1.5;
+}
+.ask-input:focus { border-color:var(--accent); }
+.ask-input::placeholder { color:#B4B4C8; }
+.ask-btn {
+  padding:12px 20px; background:var(--accent); color:#fff; border:none;
+  border-radius:10px; font-family:var(--fb); font-size:13px; font-weight:600;
+  cursor:pointer; transition:background .2s; white-space:nowrap;
+  display:flex; align-items:center; gap:6px; flex-shrink:0;
+}
+.ask-btn:hover:not(:disabled) { background:#1D4ED8; }
+.ask-btn:disabled { opacity:.5; cursor:not-allowed; }
+.ask-spinner {
+  width:12px; height:12px; border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none;
+}
+
+/* Answer bubble */
+.ask-answer-wrap { margin-top:16px; display:none; }
+.ask-answer-wrap.on { display:block; }
+.ask-answer-q {
+  font-size:11px; font-weight:700; color:var(--accent);
+  letter-spacing:.5px; text-transform:uppercase; margin-bottom:8px;
+}
+.ask-answer-box {
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:10px; padding:14px 16px;
+  font-size:14px; color:var(--ink2); line-height:1.75;
+}
+.ask-answer-box.loading {
+  display:flex; gap:6px; align-items:center; color:var(--soft); font-style:italic;
+}
+.ask-dot {
+  width:6px; height:6px; background:var(--accent); border-radius:50%;
+  animation:dot-bounce 1.2s ease-in-out infinite;
+}
+.ask-dot:nth-child(2) { animation-delay:.15s; }
+.ask-dot:nth-child(3) { animation-delay:.3s; }
+@keyframes dot-bounce { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+/* History */
+.ask-history { margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+.history-item { animation:rise .25s ease; }
+.history-q {
+  font-size:12px; font-weight:600; color:var(--accent); margin-bottom:4px;
+}
+.history-a {
+  font-size:13px; color:var(--ink2); line-height:1.7;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:8px; padding:10px 14px;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────── */
+@media(max-width:640px){
+  header { padding:0 16px; }
+  .hero  { padding:40px 16px 28px; }
+  .input-wrap, .progress-wrap, .err-box, .results, .ask-section { padding-left:12px; padding-right:12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <a class="logo" href="#">
+    <div class="logo-mark">📄</div>
+    <div class="logo-name">Intelli<b>Paper</b></div>
+  </a>
+  <div class="gemini-badge">AI Research Assistant</div>
+</header>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <h1>Turn any research paper into<br/><em>instant understanding.</em></h1>
+  <p>Paste text or upload a PDF. Get an AI-powered summary, simple explanation, method diagram, and exam prep — all in one click.</p>
+  <div class="feature-pills">
+    <span class="pill pill-ai">✦ Smart Summary</span>
+    <span class="pill pill-ai">✦ Simple Explanation</span>
+    <span class="pill pill-nlp">⬡ Architecture Flow</span>
+    <span class="pill pill-nlp">⬡ Exam Q&A</span>
+    <span class="pill pill-free">✓ Free · Local · Private</span>
+  </div>
+</section>
+
+<!-- ══ INPUT ══ -->
+<div class="input-wrap">
+  <div class="input-card">
+    <div class="tab-bar">
+      <button class="tab on" id="tab-text" onclick="switchTab('text')">✏️ Paste Text</button>
+      <button class="tab"    id="tab-file" onclick="switchTab('file')">📎 Upload File</button>
+    </div>
+    <div class="tab-body">
+      <div class="pane on" id="pane-text">
+        <textarea id="text-input" placeholder="Paste your research paper, abstract, introduction, or any academic text here…
+
+Tip: The more content you provide, the better the summary. Try pasting the full Abstract + Introduction + Conclusion."></textarea>
+        <div class="char-count" id="char-count">0 characters</div>
+      </div>
+      <div class="pane" id="pane-file">
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept=".pdf,.txt" hidden/>
+          <div class="dz-icon">📁</div>
+          <div class="dz-title">Drop PDF or TXT here</div>
+          <div class="dz-sub">or <span onclick="document.getElementById('file-input').click()">browse to upload</span></div>
+          <div class="dz-filename" id="dz-filename"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-bottom">
+      <div class="card-bottom-info">PDF · TXT · Max 16MB</div>
+      <button class="run-btn" id="run-btn" onclick="runAnalysis()">
+        <span id="run-label">✦ Generate Study Pack</span>
+        <div class="btn-spinner" id="btn-spinner"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROGRESS ══ -->
+<div class="progress-wrap" id="progress-wrap">
+  <div class="progress-card">
+    <div class="progress-label" id="progress-label">Starting…</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-steps">
+      <div class="ps" id="ps1">📄 Extracting</div>
+      <div class="ps" id="ps2">✦ Generating summary</div>
+      <div class="ps" id="ps3">💬 ELI5</div>
+      <div class="ps" id="ps4">🎯 Contributions</div>
+      <div class="ps" id="ps5">🏗️ Architecture</div>
+      <div class="ps" id="ps6">🎓 Exam Q&A</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ERROR ══ -->
+<div class="err-box" id="err-box">
+  <div class="err-inner" id="err-text"></div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div class="results" id="results">
+
+  <div class="results-top">
+    <div class="results-title">Your Study Pack</div>
+    <div class="stat-chips" id="stat-chips"></div>
+  </div>
+
+  <!-- 1. Summary -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon ci-blue">📋</div>
+        <div class="card-name">AI Summary</div>
+      </div>
+      <div class="card-head-right">
+        <button class="copy-btn" onclick="copyCard('summary-body', this)">Copy</button>
+      </div>
+    </div>
+    <div class="card-body" id="summary-body"></div>
+  </div>
+
+  <!-- 2. ELI5 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon ci-purple">💬</div>
+        <div class="card-name">Simple Explanation</div>
+      </div>
+      <div class="card-head-right">
+        <button class="copy-btn" onclick="copyCard('eli5-body', this)">Copy</button>
+      </div>
+    </div>
+    <div class="card-body" id="eli5-body"></div>
+  </div>
+
+  <!-- 3. Contributions -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon ci-green">🎯</div>
+        <div class="card-name">Key Contributions</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="contrib-list" id="contrib-list"></ul>
+    </div>
+  </div>
+
+  <!-- 4. Architecture -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon ci-amber">🏗️</div>
+        <div class="card-name">Method / Architecture Flow</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="arch-flow" id="arch-flow"></div>
+    </div>
+  </div>
+
+  <!-- 5. Exam Q&A -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-icon ci-teal">🎓</div>
+        <div class="card-name">Exam Q&amp;A</div>
+      </div>
+      <div class="card-head-right">
+        <span class="tag tag-viva">Viva Ready</span>
+        <button class="copy-btn" onclick="copyQA(this)">Copy All</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="qa-list" id="qa-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ ASK ANYTHING ══ -->
+<div class="ask-section" id="ask-section">
+  <div class="ask-card">
+    <div class="ask-head">
+      <span class="ask-head-icon">✦</span>
+      <span class="ask-head-title">Ask anything about this paper</span>
+    </div>
+    <div class="ask-body">
+      <div class="ask-input-row">
+        <textarea
+          class="ask-input"
+          id="ask-input"
+          placeholder="e.g. What evaluation metrics were used? What is the dataset size? How does the model handle overfitting?"
+          rows="2"
+        ></textarea>
+        <button class="ask-btn" id="ask-btn" onclick="askQuestion()">
+          <span id="ask-label">Ask</span>
+          <div class="ask-spinner" id="ask-spinner"></div>
+        </button>
+      </div>
+
+      <!-- Current answer -->
+      <div class="ask-answer-wrap" id="ask-answer-wrap">
+        <div class="ask-answer-q" id="ask-answer-q"></div>
+        <div class="ask-answer-box" id="ask-answer-box"></div>
+      </div>
+
+      <!-- History of past questions -->
+      <div class="ask-history" id="ask-history"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let activeTab   = 'text';
+let currentFile = null;
+let paperText   = '';
+let examQAData  = [];
+let loadTimer   = null;
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  activeTab = name;
+  ['text','file'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('on', t === name);
+    document.getElementById('pane-' + t).classList.toggle('on', t === name);
+  });
+}
+
+// ── CHAR COUNTER ──────────────────────────────────────────────────────────────
+document.getElementById('text-input').addEventListener('input', function() {
+  const n = this.value.length;
+  document.getElementById('char-count').textContent = n.toLocaleString() + ' characters';
+});
+
+// ── DROP ZONE ─────────────────────────────────────────────────────────────────
+const dz = document.getElementById('drop-zone');
+const fi = document.getElementById('file-input');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); handleFile(e.dataTransfer.files[0]); });
+dz.addEventListener('click', () => fi.click());
+fi.addEventListener('change', () => { if (fi.files[0]) handleFile(fi.files[0]); });
+function handleFile(f) {
+  currentFile = f;
+  document.getElementById('dz-filename').textContent = '✓ ' + f.name;
+}
+
+// ── PROGRESS STEPS ────────────────────────────────────────────────────────────
+const STEPS = [
+  { id:'ps1', pct:15,  label:'📄 Extracting text…'          },
+  { id:'ps2', pct:35,  label:'✦ Generating summary…'  },
+  { id:'ps3', pct:55,  label:'💬 Generating explanation…' },
+  { id:'ps4', pct:70,  label:'🎯 Finding contributions…'    },
+  { id:'ps5', pct:84,  label:'🏗️ Extracting architecture…' },
+  { id:'ps6', pct:96,  label:'🎓 Building exam Q&A…'        },
+];
+
+function startProgress() {
+  document.getElementById('progress-wrap').classList.add('on');
+  document.getElementById('err-box').classList.remove('on');
+  STEPS.forEach(s => { document.getElementById(s.id).className = 'ps'; });
+  setProgress(0, 'Initialising…');
+  let i = 0;
+  loadTimer = setInterval(() => {
+    if (i >= STEPS.length) { clearInterval(loadTimer); return; }
+    const s = STEPS[i];
+    STEPS.forEach((ss, idx) => {
+      const el = document.getElementById(ss.id);
+      if (idx < i)  el.className = 'ps done';
+      if (idx === i) el.className = 'ps on';
+    });
+    setProgress(s.pct, s.label);
+    i++;
+  }, 600);
+}
+
+function stopProgress() {
+  clearInterval(loadTimer);
+  setProgress(100, '✅ Study Pack ready!');
+  STEPS.forEach(s => { document.getElementById(s.id).className = 'ps done'; });
+  setTimeout(() => document.getElementById('progress-wrap').classList.remove('on'), 1200);
+}
+
+function setProgress(pct, label) {
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
+
+// ── MAIN ANALYSIS ─────────────────────────────────────────────────────────────
+async function runAnalysis() {
+  const text = document.getElementById('text-input').value.trim();
+  if (activeTab === 'text' && text.length < 100) {
+    showError('Please paste at least a paragraph of text (100+ characters).'); return;
+  }
+  if (activeTab === 'file' && !currentFile) {
+    showError('Please upload a PDF or TXT file first.'); return;
+  }
+
+  // Store text for Ask Anything
+  if (activeTab === 'text') paperText = text;
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  document.getElementById('run-label').textContent = 'Generating…';
+  document.getElementById('btn-spinner').style.display = 'block';
+  document.getElementById('results').classList.remove('on');
+  document.getElementById('ask-section').classList.remove('on');
+  startProgress();
+
+  try {
+    let resp;
+    if (activeTab === 'file' && currentFile) {
+      const fd = new FormData();
+      fd.append('file', currentFile);
+      resp = await fetch('/api/analyse', { method:'POST', body: fd });
+    } else {
+      resp = await fetch('/api/analyse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+    }
+
+    if (!resp.ok) {
+      const e = await resp.json();
+      throw new Error(e.error || 'Server returned error ' + resp.status);
+    }
+
+    const data = await resp.json();
+    stopProgress();
+    renderResults(data);
+
+  } catch (err) {
+    clearInterval(loadTimer);
+    document.getElementById('progress-wrap').classList.remove('on');
+    showError(err.message || 'Something went wrong. Make sure app.py is running.');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('run-label').textContent = '✦ Generate Study Pack';
+    document.getElementById('btn-spinner').style.display = 'none';
+  }
+}
+
+// ── RENDER ALL RESULTS ────────────────────────────────────────────────────────
+function renderResults(d) {
+  // Stats row
+  const chips = document.getElementById('stat-chips');
+  const lvClass = 'lv-' + (d.stats.level || '').replace(' ', '-');
+  chips.innerHTML = `
+    <div class="stat-chip"><b>${(d.stats.word_count||0).toLocaleString()}</b> words</div>
+    <div class="stat-chip"><b>~${d.stats.read_time_min||1} min</b> read</div>
+    <div class="stat-chip"><b>${d.stats.sentence_count||0}</b> sentences</div>
+    <div class="level-badge ${lvClass}">${d.stats.level||'—'}</div>
+  `;
+
+  // 1. Summary
+  const sb = document.getElementById('summary-body');
+  sb.innerHTML = (d.summary||[]).map(p => `<p class="summary-p">${esc(p)}</p>`).join('');
+
+  // 2. ELI5
+  const eb = document.getElementById('eli5-body');
+  eb.innerHTML = `<div class="eli5-wrap">` +
+    (d.eli5||[]).map(p => `<div class="eli5-p">${esc(p)}</div>`).join('') +
+    `</div>`;
+
+  // 3. Contributions
+  const cl = document.getElementById('contrib-list');
+  cl.innerHTML = (d.contributions||[]).map((c,i) =>
+    `<li class="contrib-item"><span class="contrib-n">${i+1}</span><span>${esc(c)}</span></li>`
+  ).join('');
+
+  // 4. Architecture
+  const af = document.getElementById('arch-flow');
+  const nodes = d.architecture || [];
+  af.innerHTML = nodes.map((n, i) => `
+    ${i > 0 ? '<div class="arch-arrow">↓</div>' : ''}
+    <div class="arch-node">
+      <div class="arch-label">
+        <div class="arch-num">${i+1}</div>
+        ${esc(n.label)}
+      </div>
+      <div class="arch-detail">${esc(n.detail)}</div>
+    </div>
+  `).join('');
+
+  // 5. Exam Q&A
+  examQAData = d.exam_qa || [];
+  const ql = document.getElementById('qa-list');
+  ql.innerHTML = examQAData.map(qa => `
+    <div class="qa-card">
+      <div class="qa-q">
+        <span class="qa-q-badge">Q</span>
+        ${esc(qa.q)}
+      </div>
+      <div class="qa-a">
+        <div class="qa-a-lbl">Answer</div>
+        ${esc(qa.a)}
+      </div>
+    </div>
+  `).join('');
+
+  // Show everything
+  document.getElementById('results').classList.add('on');
+  document.getElementById('ask-section').classList.add('on');
+
+  // Reset ask history
+  document.getElementById('ask-history').innerHTML = '';
+  document.getElementById('ask-answer-wrap').classList.remove('on');
+  document.getElementById('ask-input').value = '';
+
+  // Scroll to results
+  setTimeout(() => {
+    document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+  }, 200);
+}
+
+// ── ASK ANYTHING ─────────────────────────────────────────────────────────────
+async function askQuestion() {
+  const input   = document.getElementById('ask-input');
+  const question = input.value.trim();
+  if (!question) return;
+
+  const text = paperText || document.getElementById('text-input').value.trim();
+  if (!text) {
+    showAskAnswer(question, 'No paper text available. Please run the analysis first.');
+    return;
+  }
+
+  // Disable button, show spinner
+  const btn = document.getElementById('ask-btn');
+  btn.disabled = true;
+  document.getElementById('ask-label').style.display = 'none';
+  document.getElementById('ask-spinner').style.display = 'block';
+
+  // Show loading state in answer box
+  showAskLoading(question);
+
+  try {
+    const resp = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, question })
+    });
+
+    if (!resp.ok) throw new Error('Request failed: ' + resp.status);
+    const data = await resp.json();
+
+    // Move current answer to history, then show new answer
+    moveToHistory();
+    showAskAnswer(question, data.answer || 'No relevant answer found.');
+    input.value = '';
+
+  } catch (err) {
+    showAskAnswer(question, 'Error: ' + (err.message || 'Could not reach backend.'));
+  } finally {
+    btn.disabled = false;
+    document.getElementById('ask-label').style.display = 'inline';
+    document.getElementById('ask-spinner').style.display = 'none';
+    input.focus();
+  }
+}
+
+function showAskLoading(question) {
+  const wrap = document.getElementById('ask-answer-wrap');
+  const qEl  = document.getElementById('ask-answer-q');
+  const aEl  = document.getElementById('ask-answer-box');
+  wrap.classList.add('on');
+  qEl.textContent = question;
+  aEl.className = 'ask-answer-box loading';
+  aEl.innerHTML = '<div class="ask-dot"></div><div class="ask-dot"></div><div class="ask-dot"></div>';
+}
+
+function showAskAnswer(question, answer) {
+  const wrap = document.getElementById('ask-answer-wrap');
+  const qEl  = document.getElementById('ask-answer-q');
+  const aEl  = document.getElementById('ask-answer-box');
+  wrap.classList.add('on');
+  qEl.textContent = question;
+  aEl.className = 'ask-answer-box';
+  aEl.textContent = answer;
+}
+
+function moveToHistory() {
+  const wrap = document.getElementById('ask-answer-wrap');
+  if (!wrap.classList.contains('on')) return;
+  const q = document.getElementById('ask-answer-q').textContent;
+  const a = document.getElementById('ask-answer-box').textContent;
+  if (!q || !a || a === '...' ) return;
+
+  const hist = document.getElementById('ask-history');
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.innerHTML = `
+    <div class="history-q">Q: ${esc(q)}</div>
+    <div class="history-a">${esc(a)}</div>
+  `;
+  hist.insertBefore(item, hist.firstChild);
+}
+
+// Enter key in ask input
+document.getElementById('ask-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    askQuestion();
+  }
+});
+
+// ── COPY HELPERS ──────────────────────────────────────────────────────────────
+function copyCard(id, btn) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+function copyQA(btn) {
+  const text = examQAData.map(qa => `Q: ${qa.q}\nA: ${qa.a}`).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = 'Copy All', 1500);
+  });
+}
+
+// ── ERROR ─────────────────────────────────────────────────────────────────────
+function showError(msg) {
+  const box = document.getElementById('err-box');
+  document.getElementById('err-text').textContent = '⚠ ' + msg;
+  box.classList.add('on');
+  box.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ── ESCAPE HTML ───────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+}
+</script>
+</body>
+</html>
