@@ -146,26 +146,6 @@ http://127.0.0.1:5000
 
 ---
 
-## 📸 Screenshots
-
-### Home Page
-
-Add your homepage screenshot here.
-
-```
-screenshots/home.png
-```
-
-### Generated Study Pack
-
-Add the generated results screenshot here.
-
-```
-screenshots/result.png
-```
-
----
-
 ## 🎯 Future Improvements
 
 - OCR support for scanned PDFs
@@ -179,33 +159,6 @@ screenshots/result.png
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome.
-
-1. Fork the repository
-2. Create a new branch
-
-```bash
-git checkout -b feature-name
-```
-
-3. Commit your changes
-
-```bash
-git commit -m "Add new feature"
-```
-
-4. Push to your branch
-
-```bash
-git push origin feature-name
-```
-
-5. Open a Pull Request
-
----
-
 ## 👩‍💻 Author
 
 **G Jyotsna**
@@ -214,15 +167,3 @@ B.Tech – Computer Science & Engineering (AI/ML)
 Alliance University, Bengaluru
 
 GitHub: https://github.com/Jyotsna024
-
----
-
-## ⭐ Support
-
-If you found this project useful, consider giving it a ⭐ on GitHub.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
